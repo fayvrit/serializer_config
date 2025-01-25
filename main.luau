@@ -6,6 +6,7 @@ configs.rename_duplicates = false
 configs.bracket_property = true
 configs.ignore_defaults = true
 configs.ignore_nils = true
+configs.rounding = 0.1
 
 configs.datatype = {
 	udim = 'udim',
@@ -20,7 +21,7 @@ configs.datatype = {
 }
 
 configs.variable = function(name)
-	return `objects ['{name}']`
+	return `instances ['{name}']`
 end
 
 configs.callback = function(name, class, parent)
@@ -119,6 +120,10 @@ end
 
 -- DUMPS
 
+local round = function(num, float) 
+	return tonumber(string.format("%.14g", float * math.round(num / float))) 
+end
+
 local path = string.split(configs.path, '/')
 local fullpath = assert(path[1] == '' and game:GetService(path[2]), 'invalid path')
 
@@ -176,11 +181,11 @@ return {
 		end,
 
 		UDim2 = function(value: UDim2)
-			return `{configs.datatype.udim2}({value.X.Scale}, {value.X.Offset}, {value.Y.Scale}, {value.Y.Offset})`
+			return `{configs.datatype.udim2}({round(value.X.Scale, configs.rounding)}, {value.X.Offset}, {round(value.Y.Scale, configs.rounding)}, {value.Y.Offset})`
 		end,
 
 		UDim = function(value: UDim)
-			return `{configs.datatype.udim.new}({value.Scale}, {value.Offset})`
+			return `{configs.datatype.udim}({round(value.Scale, configs.rounding)}, {value.Offset})`
 		end,
 
 		Vector2 = function(value: Vector2)
