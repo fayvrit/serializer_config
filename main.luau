@@ -35,7 +35,7 @@ end
 configs.new_instance = function(...)
 	local args = {...}
 
-	local name 			= args[1]
+	local name 		= args[1]
 	local class 		= args[2]
 	local properties 	= args[3]
 	local attributes 	= args[4]
