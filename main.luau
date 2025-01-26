@@ -29,7 +29,7 @@ configs.variable = function(name)
 end
 
 configs.callback = function(name, class, parent)
-	`{name} = {parent}:new('{class}', \{\n`
+	-- `{name} = {parent}:new('{class}', \{\n`
 	return `{name} = instance.new('{class}', \{\n`
 end
 
