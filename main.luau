@@ -151,10 +151,10 @@ end
 
 return {
 	RENAME_DUPLICATES = configs.rename_duplicates,
-	IGNORE_DEFAULTS = configs.ignore_defaults,
 	IGNORE_NILS = configs.ignore_nils_duplicates,
-	SCRIPT_PATH = fullpath,
+	IGNORE_DEFAULTS = configs.ignore_defaults,
 	FORMAT = configs.new_instance,
+	SCRIPT_PATH = fullpath,
 
 	TYPE_OVERRIDES = {
 		Color3 = function(value: Color3)
