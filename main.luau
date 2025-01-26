@@ -8,6 +8,10 @@ configs.ignore_defaults = true
 configs.ignore_nils = true
 configs.rounding = 0.1
 
+configs.skip_property = {
+	'Parent',
+}
+
 configs.datatype = {
 	udim = 'udim',
 	rect = 'rect',
@@ -25,7 +29,7 @@ configs.variable = function(name)
 end
 
 configs.callback = function(name, class, parent)
-	-- `{name} = {parent}:new('{class}', \{\n`
+	`{name} = {parent}:new('{class}', \{\n`
 	return `{name} = instance.new('{class}', \{\n`
 end
 
@@ -48,16 +52,18 @@ configs.new_instance = function(...)
 	name = configs.variable(name)
 	parent = configs.variable(properties.Parent)
 
-	properties.Parent = nil
-
 	-- String Concationate
 	finalize = configs.callback(name, class, parent)
 
 	for property, value in properties do
+		if configs.skip_property[property] then continue end
+
 		finalize ..= configs.new_property(property, value)
 	end
 
 	for property, value in attributes do
+		if configs.skip_property[property] then continue end
+
 		finalize ..= configs.new_property(property, value)
 	end
 
