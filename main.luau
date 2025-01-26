@@ -52,6 +52,8 @@ configs.new_instance = function(...)
 	name = configs.variable(name)
 	parent = configs.variable(properties.Parent)
 
+	properties.Parent = parent
+
 	-- String Concationate
 	finalize = configs.callback(name, class, parent)
 
