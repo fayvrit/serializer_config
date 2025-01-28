@@ -13,15 +13,15 @@ configs.skip_property = {
 }
 
 configs.datatype = {
-	udim = 'udim',
-	rect = 'rect',
-	color3 = 'rgb',
-	udim2 = 'udim2',
-	vector2 = 'vect2',
-	colorsequence = 'rgbseq',
-	numbersequence = 'numseq',
-	colorsequencekeypoint = 'rgbkey',
-	numbersequencekeypoint = 'numkey',
+	udim = 'data.udim',
+	rect = 'data.rect',
+	color3 = 'data.rgb',
+	udim2 = 'data.udim2',
+	vector2 = 'data.vect2',
+	colorsequence = 'data.rgbseq',
+	numbersequence = 'data.numseq',
+	colorsequencekeypoint = 'data.rgbkey',
+	numbersequencekeypoint = 'data.numkey',
 }
 
 configs.variable = function(name)
@@ -30,7 +30,7 @@ end
 
 configs.callback = function(name, class, parent)
 	-- `{name} = {parent}:new('{class}', \{\n`
-	return `{name} = instance.new('{class}', \{\n`
+	return `{name} = {parent}:new('{class}', \{\n`
 end
 
 configs.new_property = function(property, value)
@@ -58,7 +58,7 @@ configs.new_instance = function(...)
 	finalize = configs.callback(name, class, parent)
 
 	for property, value in properties do
-		if configs.skip_property[property] then continue end
+		if table.find(configs.skip_property, property) then continue end
 
 		finalize ..= configs.new_property(property, value)
 	end
@@ -143,7 +143,7 @@ for index, name in path do
 	fullpath = parent:FindFirstChild(name)
 
 	if fullpath then continue end
-	
+
 	fullpath = Instance.new('Folder')
 	fullpath.Parent = parent
 	fullpath.Name = name
