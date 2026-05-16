@@ -1,5 +1,7 @@
 local configs = {}
 
+local first = true
+
 configs.path = '/ReplicatedStorage/Serialized'
 
 configs.rename_duplicates = false
@@ -9,28 +11,49 @@ configs.ignore_nils = true
 configs.rounding = 0.1
 
 configs.skip_property = {
-	'Parent',
+	'ImageContent',
+	'BottomImageContent',
+	'MidImageContent',
+	'TopImageContent',
+	'Source',
+	'Font'
 }
 
 configs.datatype = {
-	udim = 'data.udim',
-	rect = 'data.rect',
-	color3 = 'data.rgb',
-	udim2 = 'data.udim2',
-	vector2 = 'data.vect2',
-	colorsequence = 'data.rgbseq',
-	numbersequence = 'data.numseq',
-	colorsequencekeypoint = 'data.rgbkey',
-	numbersequencekeypoint = 'data.numkey',
+	['UDim.new'] = `data.udim`,
+	['Rect.new'] = `data.rect`,
+	['Color3.fromRGB'] = `data.rgb`,
+	['UDim2.new'] = `data.udim2`,
+	['Vector2.new'] = `data.vect2`,
+	['ColorSequence.new'] = `data.rgbseq`,
+	['NumberSequence.new'] = `data.numseq`,
+	['ColorSequenceKeypoint.new'] = `data.rgbkey`,
+	['NumberSequenceKeypoint.new'] = `data.numkey`,
 }
 
+configs.header_instance = function()
+	return `local Object = require(game.ReplicatedStorage.Object)\nlocal Objects = \{}`
+end
+
+configs.header_data = function()
+	local data = `\n\nlocal data = \{`
+
+	for old, new in configs.datatype do
+		new = string.gsub(new, 'data.', '')
+		
+		data ..= `\n\t{new} = {old},`
+	end
+
+	return `{data}\n\}\n\n`
+end
+
 configs.variable = function(name)
-	return `instances ['{name}']`
+	return `Objects ['{name}']`
 end
 
 configs.callback = function(name, class, parent)
 	-- `{name} = {parent}:new('{class}', \{\n`
-	return `{name} = {parent}:new('{class}', \{\n`
+	return `{name} = {first and 'Object' or parent}:new('{class}', \{\n`
 end
 
 configs.new_property = function(property, value)
@@ -40,25 +63,32 @@ end
 configs.new_instance = function(...)
 	local args = {...}
 
-	local name 		= args[1]
+	local name 			= args[1]
 	local class 		= args[2]
 	local properties 	= args[3]
 	local attributes 	= args[4]
 	local object 		= args[5]
 
-	local finalize, parent
+	local finalize = ''
+	local parent
 
 	-- String Holder
 	name = configs.variable(name)
 	parent = configs.variable(properties.Parent)
-
+	
 	properties.Parent = parent
 
 	-- String Concationate
-	finalize = configs.callback(name, class, parent)
-
+	
+	if first then
+		finalize ..= configs.header_instance()
+		finalize ..= configs.header_data()
+	end
+	
+	finalize ..= configs.callback(name, class, parent)
+	
 	for property, value in properties do
-		if table.find(configs.skip_property, property) then continue end
+		if table.find(configs.skip_property, property) or (first and property == 'Parent') then continue end
 
 		finalize ..= configs.new_property(property, value)
 	end
@@ -68,7 +98,9 @@ configs.new_instance = function(...)
 
 		finalize ..= configs.new_property(property, value)
 	end
-
+	
+	first = false
+	
 	return finalize:sub(1, -3) .. "\n})\n\n"
 end
 
@@ -158,11 +190,11 @@ return {
 
 	TYPE_OVERRIDES = {
 		Color3 = function(value: Color3)
-			return `{configs.datatype.color3}({math.floor(value.R * 255)}, {math.floor(value.G * 255)}, {math.floor(value.B * 255)})`
+			return `{configs.datatype['Color3.fromRGB']}({math.floor(value.R * 255)}, {math.floor(value.G * 255)}, {math.floor(value.B * 255)})`
 		end,
 
 		ColorSequenceKeypoint = function(value: ColorSequenceKeypoint, types)
-			return `{configs.datatype.colorsequencekeypoint}({math.round(value.Time * 1000) / 1000}, {types.Color3(value.Value)})`
+			return `{configs.datatype['ColorSequenceKeypoint.new']}({math.round(value.Time * 1000) / 1000}, {types.Color3(value.Value)})`
 		end,
 
 		ColorSequence = function(value: ColorSequence, types)
@@ -172,11 +204,11 @@ return {
 				keypoints ..= `{types.ColorSequenceKeypoint(keypoint, types)}{if i < #value.Keypoints then ", " else ""}`
 			end
 
-			return `{configs.datatype.colorsequence}\{{keypoints}}`
+			return `{configs.datatype['ColorSequence.new']}\{{keypoints}}`
 		end,
 
 		NumberSequenceKeypoint = function(value: NumberSequenceKeypoint, types)
-			return `{configs.datatype.numbersequencekeypoint}({math.round(value.Time * 1000) / 1000}, {value.Value})`
+			return `{configs.datatype['NumberSequenceKeypoint.new']}({math.round(value.Time * 1000) / 1000}, {value.Value})`
 		end,
 
 		NumberSequence = function(value: NumberSequence, types)
@@ -186,23 +218,23 @@ return {
 				keypoints ..= `{types.NumberSequenceKeypoint(keypoint, types)}{if i < #value.Keypoints then ", " else ""}`
 			end
 
-			return `{configs.datatype.numbersequence}\{{keypoints}}`
+			return `{configs.datatype['NumberSequence.new']}\{{keypoints}}`
 		end,
 
 		UDim2 = function(value: UDim2)
-			return `{configs.datatype.udim2}({round(value.X.Scale, configs.rounding)}, {value.X.Offset}, {round(value.Y.Scale, configs.rounding)}, {value.Y.Offset})`
+			return `{configs.datatype['UDim2.new']}({round(value.X.Scale, configs.rounding)}, {value.X.Offset}, {round(value.Y.Scale, configs.rounding)}, {value.Y.Offset})`
 		end,
 
 		UDim = function(value: UDim)
-			return `{configs.datatype.udim}({round(value.Scale, configs.rounding)}, {value.Offset})`
+			return `{configs.datatype['UDim.new']}({round(value.Scale, configs.rounding)}, {value.Offset})`
 		end,
 
 		Vector2 = function(value: Vector2)
-			return `{configs.datatype.vector2}({value.X}, {value.Y})`
+			return `{configs.datatype['Vector2.new']}({value.X}, {value.Y})`
 		end,
 
 		Rect = function(value: Rect, types)
-			return `{configs.datatype.rect}({types.Vector2(value.Min)}, {types.Vector2(value.Max)})`
+			return `{configs.datatype['Rect.new']}({types.Vector2(value.Min)}, {types.Vector2(value.Max)})`
 		end
 	}
 }
