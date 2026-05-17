@@ -40,7 +40,7 @@ configs.header_data = function()
 
 	for old, new in configs.datatype do
 		new = string.gsub(new, 'data.', '')
-		
+
 		data ..= `\n\t{new} = {old},`
 	end
 
@@ -75,21 +75,22 @@ configs.new_instance = function(...)
 	-- String Holder
 	name = configs.variable(name)
 	parent = configs.variable(properties.Parent)
-	
+
 	properties.Parent = parent
 
 	-- String Concationate
-	
+
 	if first then
 		finalize ..= configs.header_instance()
 		finalize ..= configs.header_data()
 	end
-	
-	finalize ..= configs.callback(name, class, parent)
-	
-	for property, value in properties do
-		if table.find(configs.skip_property, property) or (first and property == 'Parent') then continue end
 
+	finalize ..= configs.callback(name, class, parent)
+
+	for property, value in properties do
+		if table.find(configs.skip_property, property) or (not first and property == 'Parent') then continue end
+
+		
 		finalize ..= configs.new_property(property, value)
 	end
 
@@ -98,9 +99,9 @@ configs.new_instance = function(...)
 
 		finalize ..= configs.new_property(property, value)
 	end
-	
+
 	first = false
-	
+
 	return finalize:sub(1, -3) .. "\n})\n\n"
 end
 
